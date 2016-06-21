@@ -84,6 +84,9 @@ module.exports = {
 
     //result of voting session: strings 'yes','no',or 'tie'
     this.result = null;
+
+    //emit changeStateView Event
+    this.changeStateView(1);
   },
 
   // change the stateView and emit it for the client to act upon

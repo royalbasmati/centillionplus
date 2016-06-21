@@ -4,7 +4,9 @@ angular.module('MainService', [])
   return {
 
     // create the socket variable to be used to emit and listen in the controller
-    socket: io('https://dcydr.herokuapp.com'),
+    // socket: io('https://dcydr.herokuapp.com'),
+    socket: io('localhost:3000'),
+
 
     viewToRouteConverter: {
       1: '/view1',
@@ -61,7 +63,7 @@ angular.module('MainService', [])
   };       
 }])
 
-.run(function(Main, $location) {
+.run(function(Main) {
   Main.getState().then(function (state) {
     Main.updateView(state.data.stateView);
   });

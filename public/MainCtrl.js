@@ -16,11 +16,25 @@ angular.module('MainCtrl', [])
   //For displaying user's vote on view3
   $scope.userVote = null;
 
+  //For keeping track of vote result on client
+  $scope.localResult = null;
+
+  //For keep track of vote starter
+  $scope.voteStarter = false;
+
   
   //Listen to any server-side stateView changes via the socket, and update $scope.dcydrObj accorgingly
   Main.socket.on('stateViewChange', function(data) {
     // Update the voter object to reflect the new data
     $scope.dcydrObj = data;
+    //check if local result is not null
+    if ($scope.localResult !== null) {
+      //do not change view
+      return;
+    } else {
+    // Update local result
+      $scope.localResult = data.result;
+    }
     // Change the route as appropriate
     Main.updateView(data.stateView);
     // This line seems to be needed to make sure all clients update appropriately:
@@ -50,6 +64,8 @@ angular.module('MainCtrl', [])
   // Sends POST request to update the server
   // (causes all users views will switch to v2a, handled via sockets)
   $scope.go = function() {
+    //set this client as vote starter
+    $scope.voteStarter = true;
     Main.startVoting({'votes': $scope.dcydrObj.totalVotes}).
       catch(function (err) {
         console.log(err);
@@ -81,12 +97,25 @@ angular.module('MainCtrl', [])
     if (confirm('Are you sure you want to reset?')) {
       //Reset dcydr object to defaults (copy the object so the two are not connected)
       $scope.dcydrObj = JSON.parse($scope.dcydrObjDefaults);
-      //API call to reset state on server
-      Main.resetState()
-      .then(
-        //Reset view to view1
-        Main.updateView(1)
-      );
+      // reset localResult 
+      $scope.localResult = null;
+      //check current state
+      Main.getState().then(function(state) {
+        //check if result is not null or voteStarter is true
+        if (state.data.result !== null || voteStarter) {
+          //reset the voteStarter
+          $scope.voteStarter = false;
+          //API call to reset state on server
+          Main.resetState(state).then(function (state) {
+            //Reset view
+            Main.updateView(state.data.stateView);
+          });
+        } else {
+          //Update view without reset
+          Main.updateView(state.data.stateView);
+        }
+      });
+      
     }
   };
 });
